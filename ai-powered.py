@@ -18,7 +18,7 @@ def load_lottie_url(url: str):
     r = requests.get(url)
     if r.status_code != 200:
         return None
-    return r.json  
+    return r.json()  
 animation = load_lottie_url("https://assets10.lottiefiles.com/packages/lf20_j1adxtyb.json")
 
 st.markdown("""
