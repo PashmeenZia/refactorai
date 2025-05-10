@@ -35,6 +35,18 @@ st.markdown("""
     .score-box {background : linear-gradient(to right, #6a11cb, #2575fc); padding: 10px; border-radius: 8px; color: white; text-align: center; font-size: 24px; font-weight: bold;}
     .footer {text-align: center; font-size: 14px; color: #aaa; margin-top: 40px;}
     .social-icons img {width: 25px; margin: 0 5px; vertical-align: middle}
+
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(to bottom, #6a11cb, #2575fc);
+        color: white;
+    }
+
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3, 
+    [data-testid="stSidebar"] p {
+        color: white;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -50,22 +62,23 @@ with col2:
     else:
         st.warning("⚠️ Failed to load animation")
 
-# Sidebar
+# ---------- Sidebar ----------
+def clear_code():
+    st.session_state.input_code = ""
+
 with st.sidebar:
     st.markdown("<div class='feature-box'><h2>🔧 Features</h2><p>Refactor, analyze data, optimized your given code.</p></div>", unsafe_allow_html=True)
     st.markdown("<div class='doc-box'><h3>📘 Documentation</h3><p>Get started with AI-driven optimization.</p></div>", unsafe_allow_html=True)
-    if st.button("🗑️ Clear Code", help="Reset your code input"):
-        st.session_state.code_input = ""
+    st.button("🗑️ Clear Code", on_click=clear_code, help="Reset your code input")
 
-# Code Input
-if "code_input" not in st.session_state:
-    st.session_state.code_input = ""
+# ---------- Code Input ----------
+if "input_code" not in st.session_state:
+    st.session_state.input_code = ""
 
 tabs = st.tabs(["📝 Code Input", "⚙️ Refactored Output", "🎯 Scorecard", "📊 Module Graph", "✨ Code Optimization Suggestions"])
 
 with tabs[0]:
-    code_input = st.text_area("Paste your Python code here:", value=st.session_state.code_input, height=300, key="input_code")
-
+    code_input = st.text_area("Paste your Python code here:", value=st.session_state.input_code, height=300, key="input_code")
 
 # ---------- Functional Parts ----------
 def refactor_code(code):
@@ -80,7 +93,6 @@ def refactor_code(code):
     result = subprocess.run(["flake8", tmp_path], capture_output=True, text=True)
     return formatted_code, result.stdout
 
-
 def count_issues(output):
     return {
         "Unused Imports": len(re.findall(r"unused-import", output)),
@@ -88,17 +100,14 @@ def count_issues(output):
         "Undefined Variables": len(re.findall(r"undefined-variable", output)),
     }
 
-
 def quality_score(issue_count):
     total = sum(issue_count.values())
     return max(0, 100 - total * 10)
-
 
 def extract_imports(code):
     tree = ast.parse(code)
     imports = [node.names[0].name for node in tree.body if isinstance(node, ast.Import)]
     return imports
-
 
 def plot_import_usage(imports):
     import_counts = {imp: imports.count(imp) for imp in set(imports)}
@@ -111,7 +120,6 @@ def plot_import_usage(imports):
     fig.update_layout(bargap=0.3)
     st.plotly_chart(fig, use_container_width=True)
 
-
 def download_button(code):
     b64 = base64.b64encode(code.encode()).decode()
     return f"""
@@ -123,10 +131,8 @@ def download_button(code):
     </div>
     """
 
-
 def optimize_code_suggestions(code):
     suggestions = []
-
     if "for i in range(len(list))" in code:
         suggestions.append("Use 'for item in list' instead of 'for i in range(len(list))'.")
     if "== None" in code:
@@ -151,9 +157,7 @@ def optimize_code_suggestions(code):
         suggestions.append("Avoid excessive lambdas. Use functions.")
     if "list(map(" in code:
         suggestions.append("Use list comprehensions instead of 'map()'.")
-
     return suggestions
-
 
 # ---------- Action Button ----------
 if st.button("⚙️ Refactor Now"):
